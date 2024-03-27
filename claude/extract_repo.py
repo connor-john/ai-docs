@@ -1,22 +1,25 @@
 import os
 import sys
-import zipfile
 import ast
 import shutil
-import requests
+
+
+def make_zip_file(directory_path, output_file_name):
+    """ "Zip the given directory of a local repository"""
+    shutil.make_archive(output_file_name, "zip", directory_path)
+    return f"{output_file_name}.zip"
 
 
 def is_desired_file(file_path):
     """Check if the file is a JavaScript, TypeScript, or Prisma."""
     return (
-        file_path.endswith(".js")
-        or file_path.endswith(".ts")
+        file_path.endswith(".ts")
         or file_path.endswith(".tsx")
         or file_path.endswith(".prisma")
     )
 
 
-def is_likely_useful_file(file_path):
+def is_likely_useful_file(file_path: str):
     """Determine if the file is likely to be useful by excluding certain directories and specific file types."""
     excluded_dirs = [
         "docs",
@@ -33,25 +36,32 @@ def is_likely_useful_file(file_path):
     utility_or_config_files = ["hubconf.py", "setup.py", "package-lock.json"]
     github_workflow_or_docs = ["stale.py", "gen-card-", "write_model_card"]
 
-    if any(part.startswith(".") for part in file_path.split("/")):
+    check_path = file_path.replace("\\", "/")
+    parts = check_path.split(os.sep)[1:]
+    if any(part.startswith(".") for part in parts):
         return False
-    if "test" in file_path.lower():
+    if "test" in check_path.lower():
         return False
     for excluded_dir in excluded_dirs:
-        if f"/{excluded_dir}/" in file_path or file_path.startswith(f"{excluded_dir}/"):
+        if f"/{excluded_dir}/" in check_path or check_path.startswith(
+            f"{excluded_dir}/"
+        ):
             return False
     for file_name in utility_or_config_files:
-        if file_name in file_path:
+        if file_name in check_path:
             return False
-    return all(doc_file not in file_path for doc_file in github_workflow_or_docs)
+    if not all(doc_file not in check_path for doc_file in github_workflow_or_docs):
+        return False
+
+    return True
 
 
-def has_sufficient_content(file_content, min_line_count=10):
+def has_sufficient_content(file_content, min_line_count=5):
     """Check if the file has a minimum number of substantive lines."""
     lines = [
         line
-        for line in file_content.split("\n")
-        if line.strip() and not line.strip().startswith("#")
+        for line in file_content
+        if line.strip() and not line.strip().startswith("//")
     ]
     return len(lines) >= min_line_count
 
@@ -69,56 +79,31 @@ def remove_comments_and_docstrings(source):
     return ast.unparse(tree)
 
 
-def download_repo(repo_url, output_file):
-    """Download and process files from a GitHub repository."""
-    if "/tree/" in repo_url:
-        repo_url = f"https://download-directory.github.io/?{repo_url}"
-
-    response = requests.get(f"{repo_url}/archive/master.zip")
-    read_zip_file(response, output_file)
-
-
-def read_zip_file(zip_file_path, output_file):
-    """Open the zip file contents and extract to txt format for relevant code content."""
-    if not os.path.exists(zip_file_path):
-        print("No File!")
-        return
-
-    zip_file = zipfile.ZipFile(zip_file_path, "r")
+def extract_local_directory(directory_path):
+    """Walks through a local directory and converts relevant code files to a .txt file"""
+    repo_name = os.path.basename(directory_path)
+    output_file = f"{repo_name}_code.txt"
 
     with open(output_file, "w", encoding="utf-8") as outfile:
-        for file_path in zip_file.namelist():
-            # Skip directories, non-Python files, less likely useful files, hidden directories, and test files
-            if (
-                file_path.endswith("/")
-                or not is_desired_file(file_path)
-                or not is_likely_useful_file(file_path)
-            ):
-                continue
-
-            file_content = zip_file.read(file_path).decode("utf-8")
-
-            # Skip test files based on content and files with insufficient substantive content
-            if is_desired_file(file_content) or not has_sufficient_content(
-                file_content
-            ):
-                continue
-
-            # try:
-            #     file_content = remove_comments_and_docstrings(file_content)
-            # except SyntaxError:
-            #     # Skip files with syntax errors
-            #     continue
-
-            outfile.write(f"# File: {file_path}\n")
-            outfile.write(file_content)
-            outfile.write("\n\n")
-
-
-def make_zip_file(directory_path, output_file_name):
-    """ "Zip the given directory of a local repository"""
-    shutil.make_archive(output_file_name, "zip", directory_path)
-    return f"{output_file_name}.zip"
+        for root, _, files in os.walk(directory_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                # Skip directories, non-code files, less likely useful files, hidden directories, and test files
+                if (
+                    file_path.endswith("/")
+                    or not is_desired_file(file_path)
+                    or not is_likely_useful_file(file_path)
+                ):
+                    continue
+                with open(file_path, "r", encoding="utf-8") as file_content:
+                    # Skip test files based on content and files with insufficient substantive content
+                    file_lines = file_content.readlines()
+                    if is_desired_file(file_path) and has_sufficient_content(
+                        file_lines
+                    ):
+                        outfile.write(f"# File: {file_path}\n")
+                        outfile.writelines(file_lines)
+                        outfile.write("\n\n")
 
 
 if __name__ == "__main__":
@@ -126,10 +111,5 @@ if __name__ == "__main__":
         print("Usage: python extract_repo.py <local repository directory>")
         sys.exit(1)
 
-    directory_path = sys.argv[1]  #
-    repo_name = os.path.basename(directory_path)
-    output_file = f"{repo_name}_code.txt"
-    zip_file_path = make_zip_file(directory_path, repo_name)
-
-    read_zip_file(zip_file_path, output_file)
-    print(f"Combined source code saved to {output_file}")
+    directory_path = sys.argv[1]
+    extract_local_directory(directory_path)
