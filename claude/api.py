@@ -1,3 +1,4 @@
+import sys
 import anthropic
 import os
 from dotenv import load_dotenv, find_dotenv
@@ -27,17 +28,19 @@ You will receive both a description of the changes, an outline of the changes an
 """
 
 BASIC_DOCS_SYSTEM_PROMPT = """Your job is to act as the snior expert software engineer and provide detailed technical documentation broken into readbile formats. 
-You will be able to read the majority of a code repository given as a converted single text. Documentation should be broken down into:
+You will be able to read the majority of a code repository given as a converted single text with the PRefic "#File:" declaring the start of the new file e.g., # File: masters-and-sons-main/src/components/ArrowTable.tsx. 
+Documentation should be broken down into:
 Overall project structure, key features, data structure and common data objects, and key points of complexity with clear descriptions.
 The output should be detailed in standard markdown, using headers to improve readability.
 """
 
 
 def request_message(input: str) -> str:
+    """"""
     response = CLIENT.messages.create(
         model="claude-3-opus-20240229",
         system=BASIC_DOCS_SYSTEM_PROMPT,
-        max_tokens=16384,
+        max_tokens=4096,
         messages=[
             {"role": "user", "content": input},
         ],
@@ -46,8 +49,23 @@ def request_message(input: str) -> str:
     return response.model_dump_json()
 
 
-input_text = input("Enter question:")
+def read_file(file_path):
+    """"""
+    # read txt file
+    if os.path.exists(file_path):
+        with open(file_path, "r", encoding="utf-8") as file:
+            repo_content = file.read()
+    else:
+        print("Error: The file does not exist.")
 
-if len(input_text) > 0:
-    response = request_message(input_text)
-    print(response)
+    input = f"Fiven this repo. \n{repo_content}\ncomplete your instruction"
+    message = request_message(input)
+    print(message)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python script.py <txt file path>")
+        sys.exit(1)
+
+    read_file(sys.argv[1])
