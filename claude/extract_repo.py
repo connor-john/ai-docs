@@ -2,6 +2,8 @@ import os
 import sys
 import zipfile
 import ast
+import shutil
+import requests
 
 
 def is_desired_file(file_path):
@@ -67,18 +69,22 @@ def remove_comments_and_docstrings(source):
     return ast.unparse(tree)
 
 
-def download_repo(zip_file_path, output_file):
+def download_repo(repo_url, output_file):
     """Download and process files from a GitHub repository."""
-    # if "/tree/" in repo_url:
-    #     repo_url = f"https://download-directory.github.io/?{repo_url}"
+    if "/tree/" in repo_url:
+        repo_url = f"https://download-directory.github.io/?{repo_url}"
 
-    # response = requests.get(f"{repo_url}/archive/master.zip")
+    response = requests.get(f"{repo_url}/archive/master.zip")
+    read_zip_file(response, output_file)
+
+
+def read_zip_file(zip_file_path, output_file):
+    """Open the zip file contents and extract to txt format for relevant code content."""
     if not os.path.exists(zip_file_path):
         print("No File!")
         return
 
     zip_file = zipfile.ZipFile(zip_file_path, "r")
-    print(zip_file)
 
     with open(output_file, "w", encoding="utf-8") as outfile:
         for file_path in zip_file.namelist():
@@ -109,14 +115,21 @@ def download_repo(zip_file_path, output_file):
             outfile.write("\n\n")
 
 
+def make_zip_file(directory_path, output_file_name):
+    """ "Zip the given directory of a local repository"""
+    shutil.make_archive(output_file_name, "zip", directory_path)
+    return f"{output_file_name}.zip"
+
+
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: python script.py <zip file path>")
+        print("Usage: python extract_repo.py <local repository directory>")
         sys.exit(1)
 
-    zip_file_path = sys.argv[1]  #
-    repo_name = zip_file_path.split(".")[0]
+    directory_path = sys.argv[1]  #
+    repo_name = os.path.basename(directory_path)
     output_file = f"{repo_name}_code.txt"
+    zip_file_path = make_zip_file(directory_path, repo_name)
 
-    download_repo(zip_file_path, output_file)
+    read_zip_file(zip_file_path, output_file)
     print(f"Combined source code saved to {output_file}")
