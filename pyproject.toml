@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.9"
 python-dotenv = "^1.0.1"
 anthropic = "^0.21.3"
+transformers = "^4.39.1"
 
 
 [build-system]

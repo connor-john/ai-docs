@@ -2,6 +2,7 @@ import sys
 import anthropic
 import os
 from dotenv import load_dotenv, find_dotenv
+from transformers import GPT2Tokenizer
 
 load_dotenv(find_dotenv())
 
@@ -57,6 +58,15 @@ The output should be detailed in standard markdown, using headers to improve rea
 """
 
 
+def check_prompt_token_size(prompt: str) -> None:
+    """Use GPT-2 to check the approximate number of tokens in a prompt"""
+    tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+    tokens = tokenizer.encode(prompt, add_special_tokens=False)
+    # Token count
+    token_count = len(tokens)
+    print(f"Approximate token count for GPT-4: {token_count}")
+
+
 def request_message(input: str) -> str:
     """"""
     response = CLIENT.messages.create(
@@ -80,14 +90,14 @@ def read_file(file_path):
     else:
         print("Error: The file does not exist.")
 
-    input = f"Fiven this repo. \n{repo_content}\ncomplete your instruction"
-    message = request_message(input)
-    print(message)
+    input = f"Given this repo. \n{repo_content}\ncomplete your instruction"
+    return input
 
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: python script.py <txt file path>")
+        print("Usage: python api.py <txt file path>")
         sys.exit(1)
 
-    read_file(sys.argv[1])
+    input = read_file(sys.argv[1])
+    check_prompt_token_size(input)

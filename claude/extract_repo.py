@@ -4,13 +4,13 @@ import ast
 import shutil
 
 
-def make_zip_file(directory_path, output_file_name):
-    """ "Zip the given directory of a local repository"""
+def make_zip_file(directory_path: str, output_file_name: str) -> str:
+    """Zip the given directory of a local repository"""
     shutil.make_archive(output_file_name, "zip", directory_path)
     return f"{output_file_name}.zip"
 
 
-def is_desired_file(file_path):
+def is_desired_file(file_path: str) -> bool:
     """Check if the file is a JavaScript, TypeScript, or Prisma."""
     return (
         file_path.endswith(".ts")
@@ -19,7 +19,7 @@ def is_desired_file(file_path):
     )
 
 
-def is_likely_useful_file(file_path: str):
+def is_likely_useful_file(file_path: str) -> bool:
     """Determine if the file is likely to be useful by excluding certain directories and specific file types."""
     excluded_dirs = [
         "docs",
@@ -56,7 +56,7 @@ def is_likely_useful_file(file_path: str):
     return True
 
 
-def has_sufficient_content(file_content, min_line_count=5):
+def has_sufficient_content(file_content: list[str], min_line_count: int = 5) -> bool:
     """Check if the file has a minimum number of substantive lines."""
     lines = [
         line
@@ -79,7 +79,7 @@ def remove_comments_and_docstrings(source):
     return ast.unparse(tree)
 
 
-def extract_local_directory(directory_path):
+def extract_local_directory(directory_path: str) -> None:
     """Walks through a local directory and converts relevant code files to a .txt file"""
     repo_name = os.path.basename(directory_path)
     output_file = f"{repo_name}_code.txt"
