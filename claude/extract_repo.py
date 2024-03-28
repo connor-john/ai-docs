@@ -11,13 +11,16 @@ def make_zip_file(directory_path: str, output_file_name: str) -> str:
 
 
 def is_desired_file(file_path: str) -> bool:
-    """Check if the file is a JavaScript, TypeScript, or Prisma."""
-    return (
-        file_path.endswith(".ts")
-        or file_path.endswith(".tsx")
-        or file_path.endswith(".prisma")
-        or file_path.endswith(".py")
-    )
+    """Check if the file is a relevant coding file or a key project file."""
+    # Check for specific file types
+    if file_path.endswith((".ts", ".tsx", ".prisma", ".py")):
+        return True
+
+    # Check for specific file names
+    if os.path.basename(file_path) in ("package.json", "pyproject.toml"):
+        return True
+
+    return False
 
 
 def is_likely_useful_file(file_path: str) -> bool:

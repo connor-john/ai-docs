@@ -30,7 +30,7 @@ You will receive both a description of the changes, an outline of the changes an
 
 BASIC_DOCS_SYSTEM_PROMPT = """Your job is to act as the expert software engineer and provide detailed technical documentation broken into readbile formats. 
 You will be able to read the majority of a code repository given as a converted single text with the Prefix "#File:" declaring the start of the new file e.g., # File: masters-and-sons-main/src/components/ArrowTable.tsx. 
-Typescipt projects are required to use pnpm for commands. MySQL databases are typically planetscale, and in that case we follow planetscales recommended use of prisma (if prisms ORM is used).
+Typescipt projects are required to use pnpm for commands, python project if they have a pyproject.toml will be using poetry. MySQL databases are typically planetscale, and in that case we follow planetscales recommended use of prisma (if prisms ORM is used).
 Documentation should be broken down into:
 Introduction:
 - Provide a brief overview of the project.
