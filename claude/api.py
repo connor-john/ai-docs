@@ -92,7 +92,7 @@ def read_file(file_path):
     return repo_content
 
 
-def generate_docs(file_path):
+def _generate_docs(file_path):
     """Generate docs for the provided repo using Claude Opus."""
     repo_name = str(os.path.splitext(os.path.basename(file_path))[0]).replace(
         "_code", ""
@@ -119,4 +119,4 @@ if __name__ == "__main__":
         print("Usage: python api.py <txt file path>")
         sys.exit(1)
 
-    generate_docs(sys.argv[1])
+    _generate_docs(sys.argv[1])

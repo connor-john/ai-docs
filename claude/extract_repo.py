@@ -106,6 +106,8 @@ def extract_local_directory(directory_path: str) -> None:
                         outfile.writelines(file_lines)
                         outfile.write("\n\n")
 
+    return output_file
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
