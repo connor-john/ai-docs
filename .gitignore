@@ -1,3 +1,5 @@
 .env
 *.txt
 *.zip
+__pycache__
+*.pyc

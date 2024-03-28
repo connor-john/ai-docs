@@ -1,7 +1,9 @@
 import os
+import sys
 
-from claude.api import (
+from .api import (
     BASIC_DOCS_SYSTEM_PROMPT,
+    REFINED_DOCS_FOLLOW_UP_PROMPT,
     check_prompt_token_size,
     read_file,
     request_message,
@@ -26,8 +28,38 @@ def generate_docs_from_local_repo(directory_path):
     if str(proceed_check).upper() != "Y":
         print("Exiting")
 
-    response = request_message(input_prompt, BASIC_DOCS_SYSTEM_PROMPT)
+    messages = [
+        {"role": "user", "content": input_prompt},
+    ]
+    response = request_message(BASIC_DOCS_SYSTEM_PROMPT, messages)
 
     message = response.content[0].text
     with open(f"{repo_name}-docs.md", "w", encoding="utf-8") as file:
         file.write(message)
+
+    proceed_check = input(
+        f"Please check the file generated at: {repo_name}-docs.md. Do you wish to further refine documentation? (Y/N)"
+    )
+    if str(proceed_check).upper() != "Y":
+        print("Exiting")
+
+    messages.extend(
+        [
+            {"role": "assistant", "content": message},
+            {"role": "user", "content": REFINED_DOCS_FOLLOW_UP_PROMPT},
+        ]
+    )
+    response = request_message(BASIC_DOCS_SYSTEM_PROMPT, messages)
+
+    message = response.content[0].text
+    with open(f"{repo_name}-further-docs.md", "w", encoding="utf-8") as file:
+        file.write(message)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python generate_docs.py <local repository directory>")
+        sys.exit(1)
+
+    directory_path = sys.argv[1]
+    generate_docs_from_local_repo(directory_path)

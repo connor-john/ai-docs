@@ -28,7 +28,7 @@ Can you think of any inputs or external events that could break the code?
 You will receive both a description of the changes, an outline of the changes and the existing codebase.
 """
 
-BASIC_DOCS_SYSTEM_PROMPT = """Your job is to act as the snior expert software engineer and provide detailed technical documentation broken into readbile formats. 
+BASIC_DOCS_SYSTEM_PROMPT = """Your job is to act as the expert software engineer and provide detailed technical documentation broken into readbile formats. 
 You will be able to read the majority of a code repository given as a converted single text with the Prefix "#File:" declaring the start of the new file e.g., # File: masters-and-sons-main/src/components/ArrowTable.tsx. 
 Typescipt projects are required to use pnpm for commands. MySQL databases are typically planetscale, and in that case we follow planetscales recommended use of prisma (if prisms ORM is used).
 Documentation should be broken down into:
@@ -57,6 +57,39 @@ Getting Started:
 The output should be detailed in standard markdown, using headers to improve readability. 
 """
 
+REFINED_DOCS_FOLLOW_UP_PROMPT = """You are instructed to further refine the documentation, there is no need to repeat basic content. Focus on delivering expert value insights for internal development handover outlined in the below criteria.
+In-Depth Architecture Overview:
+- Provide comprehensive diagrams and descriptions of the system architecture, including data flow, service interactions, and external dependencies.
+- Detail the critical architectural decisions and their justifications, discussing the trade-offs and alternatives considered.
+Advanced Codebase Insights:
+- Delve into complex modules and components, explaining intricate details that are crucial for understanding system behavior.
+- Document any non-obvious implementation strategies and optimizations, explaining why they were necessary and how they impact the system.
+Environment and Toolchain Deep Dive:
+- Offer a detailed guide on the development, testing, and production environments, including specific configurations, underlying infrastructure details, and environment parity practices.
+- Describe the complete toolchain, including build systems, deployment pipelines, and any custom tooling.
+Critical Dependency Analysis:
+- Provide an exhaustive overview of external libraries, frameworks, and services the system depends on, including versioning, patching strategies, and known issues.
+- Discuss how dependencies are managed, potential risks associated with them, and mitigation strategies.
+Performance Considerations:
+- Document performance benchmarks, profiling methods, and optimization strategies.
+- Include case studies of past performance issues, their analysis, and the solutions implemented.
+Security Protocols:
+- Detail the security measures and protocols in place, including authentication, authorization, data encryption, and any proprietary security frameworks or libraries.
+- Discuss security best practices, known vulnerabilities (and their mitigations), and any relevant security audits.
+Testing and Quality Assurance:
+- Elaborate on the testing strategy, including unit, integration, and end-to-end tests, highlighting any test-driven development (TDD) practices.
+- Document the approach to continuous integration/continuous deployment (CI/CD), test automation, and quality benchmarks.
+Troubleshooting and Debugging Guide:
+- Provide a detailed guide for troubleshooting common issues, including debugging tips, logging best practices, and monitoring tools used.
+- Share real-world incidents or outages, post-mortem analyses, and lessons learned.
+Data Management and Migration:
+- Explain the data architecture, schema design, and any data migration strategies or scripts.
+- Discuss backup strategies, data integrity checks, and disaster recovery plans.
+Developer Onboarding:
+- Create a comprehensive onboarding guide for new developers, including step-by-step setup instructions, key contacts, and resources for getting up to speed.
+- Include a glossary of terms, acronyms, and jargon used within the project to aid in understanding the documentation and codebase.
+"""
+
 
 def check_prompt_token_size(prompt: str) -> None:
     """Use GPT-2 to check the approximate number of tokens in a prompt"""
@@ -66,15 +99,15 @@ def check_prompt_token_size(prompt: str) -> None:
     return len(tokens)
 
 
-def request_message(input: str, system_prompt: str) -> anthropic.types.Message:
+def request_message(
+    system_prompt: str, messages: list[dict[str, str]]
+) -> anthropic.types.Message:
     """Send message to Anthropic."""
     response = CLIENT.messages.create(
         model="claude-3-opus-20240229",
         system=system_prompt,
         max_tokens=4096,
-        messages=[
-            {"role": "user", "content": input},
-        ],
+        messages=messages,
     )
 
     return response
@@ -107,7 +140,10 @@ def _generate_docs(file_path):
     if str(proceed_check).upper() != "Y":
         print("Exiting")
 
-    response = request_message(input_prompt, BASIC_DOCS_SYSTEM_PROMPT)
+    messages = [
+        {"role": "user", "content": input_prompt},
+    ]
+    response = request_message(BASIC_DOCS_SYSTEM_PROMPT, messages)
 
     message = response.content[0].text
     with open(f"{repo_name}-docs.md", "w", encoding="utf-8") as file:
