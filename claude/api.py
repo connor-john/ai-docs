@@ -63,26 +63,25 @@ def check_prompt_token_size(prompt: str) -> None:
     tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
     tokens = tokenizer.encode(prompt, add_special_tokens=False)
     # Token count
-    token_count = len(tokens)
-    print(f"Approximate token count for GPT-4: {token_count}")
+    return len(tokens)
 
 
-def request_message(input: str) -> str:
-    """"""
+def request_message(input: str, system_prompt: str) -> anthropic.types.Message:
+    """Send message to Anthropic."""
     response = CLIENT.messages.create(
         model="claude-3-opus-20240229",
-        system=BASIC_DOCS_SYSTEM_PROMPT,
+        system=system_prompt,
         max_tokens=4096,
         messages=[
             {"role": "user", "content": input},
         ],
     )
 
-    return response.model_dump_json()
+    return response
 
 
 def read_file(file_path):
-    """"""
+    """Read the text file containing the repo content."""
     # read txt file
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as file:
@@ -90,8 +89,29 @@ def read_file(file_path):
     else:
         print("Error: The file does not exist.")
 
-    input = f"Given this repo. \n{repo_content}\ncomplete your instruction"
-    return input
+    return repo_content
+
+
+def generate_docs(file_path):
+    """Generate docs for the provided repo using Claude Opus."""
+    repo_name = str(os.path.splitext(os.path.basename(file_path))[0]).replace(
+        "_code", ""
+    )
+    file_content = read_file(file_path)
+    input_prompt = f"Given this repo. \n{file_content}\ncomplete your instruction"
+    token_size = check_prompt_token_size(input_prompt)
+
+    proceed_check = input(
+        f"Input token size is: {token_size}. Do you wish to proceed? (Y/N)"
+    )
+    if str(proceed_check).upper() != "Y":
+        print("Exiting")
+
+    response = request_message(input_prompt, BASIC_DOCS_SYSTEM_PROMPT)
+
+    message = response.content[0].text
+    with open(f"{repo_name}-docs.md", "w", encoding="utf-8") as file:
+        file.write(message)
 
 
 if __name__ == "__main__":
@@ -99,5 +119,4 @@ if __name__ == "__main__":
         print("Usage: python api.py <txt file path>")
         sys.exit(1)
 
-    input = read_file(sys.argv[1])
-    check_prompt_token_size(input)
+    generate_docs(sys.argv[1])

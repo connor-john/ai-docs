@@ -16,6 +16,7 @@ def is_desired_file(file_path: str) -> bool:
         file_path.endswith(".ts")
         or file_path.endswith(".tsx")
         or file_path.endswith(".prisma")
+        or file_path.endswith(".py")
     )
 
 
