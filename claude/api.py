@@ -139,6 +139,7 @@ def _generate_docs(file_path):
     )
     if str(proceed_check).upper() != "Y":
         print("Exiting")
+        sys.exit(1)
 
     messages = [
         {"role": "user", "content": input_prompt},

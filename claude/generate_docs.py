@@ -27,6 +27,7 @@ def generate_docs_from_local_repo(directory_path):
     )
     if str(proceed_check).upper() != "Y":
         print("Exiting")
+        sys.exit(1)
 
     messages = [
         {"role": "user", "content": input_prompt},
@@ -42,6 +43,7 @@ def generate_docs_from_local_repo(directory_path):
     )
     if str(proceed_check).upper() != "Y":
         print("Exiting")
+        sys.exit(1)
 
     messages.extend(
         [
