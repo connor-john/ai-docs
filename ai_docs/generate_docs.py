@@ -1,4 +1,3 @@
-import os
 import sys
 
 from .api import (
@@ -8,7 +7,7 @@ from .api import (
     read_file,
     request_message,
 )
-from claude.extract_repo import extract_local_directory
+from ai_docs.extract_repo import extract_local_directory
 
 
 def _extend_docs(repo_name: str, messages: list[dict[str, str]], message: str) -> None:

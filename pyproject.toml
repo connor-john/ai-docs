@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "claude"
+name = "ai_docs"
 version = "0.1.0"
 description = ""
 authors = ["Connor (Cub) <connor@cubdigital.co.nz>"]
