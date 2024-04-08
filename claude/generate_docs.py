@@ -37,9 +37,6 @@ def generate_docs_from_local_repo(directory_path):
     """Generate docs for the provided repo using Claude Opus."""
 
     code_file_path = extract_local_directory(directory_path)
-    repo_name = str(os.path.splitext(os.path.basename(code_file_path))[0]).replace(
-        "_code", ""
-    )
     file_content = read_file(code_file_path)
     input_prompt = f"Given this repo. \n{file_content}\ncomplete your instruction"
     token_size = check_prompt_token_size(input_prompt)
