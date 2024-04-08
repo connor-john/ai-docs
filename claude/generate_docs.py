@@ -11,6 +11,28 @@ from .api import (
 from claude.extract_repo import extract_local_directory
 
 
+def _extend_docs(repo_name: str, messages: list[dict[str, str]], message: str) -> None:
+    """Prompt further to refine the documentation for niche insights"""
+    proceed_check = input(
+        f"Please check the file generated at: {repo_name}-docs.md. Do you wish to further refine documentation? (Y/N)"
+    )
+    if str(proceed_check).upper() != "Y":
+        print("Exiting")
+        sys.exit(1)
+
+    messages.extend(
+        [
+            {"role": "assistant", "content": message},
+            {"role": "user", "content": REFINED_DOCS_FOLLOW_UP_PROMPT},
+        ]
+    )
+    response = request_message(BASIC_DOCS_SYSTEM_PROMPT, messages)
+
+    message = response.content[0].text
+    with open(f"{repo_name}-further-docs.md", "w", encoding="utf-8") as file:
+        file.write(message)
+
+
 def generate_docs_from_local_repo(directory_path):
     """Generate docs for the provided repo using Claude Opus."""
 
@@ -35,26 +57,8 @@ def generate_docs_from_local_repo(directory_path):
     response = request_message(BASIC_DOCS_SYSTEM_PROMPT, messages)
 
     message = response.content[0].text
-    with open(f"{repo_name}-docs.md", "w", encoding="utf-8") as file:
-        file.write(message)
-
-    proceed_check = input(
-        f"Please check the file generated at: {repo_name}-docs.md. Do you wish to further refine documentation? (Y/N)"
-    )
-    if str(proceed_check).upper() != "Y":
-        print("Exiting")
-        sys.exit(1)
-
-    messages.extend(
-        [
-            {"role": "assistant", "content": message},
-            {"role": "user", "content": REFINED_DOCS_FOLLOW_UP_PROMPT},
-        ]
-    )
-    response = request_message(BASIC_DOCS_SYSTEM_PROMPT, messages)
-
-    message = response.content[0].text
-    with open(f"{repo_name}-further-docs.md", "w", encoding="utf-8") as file:
+    readme_path = f"{directory_path}/README.md"
+    with open(readme_path, "w", encoding="utf-8") as file:
         file.write(message)
 
 
