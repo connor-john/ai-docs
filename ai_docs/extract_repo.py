@@ -35,7 +35,6 @@ def is_likely_useful_file(file_path: str) -> bool:
         "benchmarks",
         "node_modules",
         ".venv",
-        "data",
     ]
     utility_or_config_files = ["hubconf.py", "setup.py", "package-lock.json"]
     github_workflow_or_docs = ["stale.py", "gen-card-", "write_model_card"]
