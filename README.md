@@ -1,3 +1,5 @@
+
+
 # AI Docs
 
 > [!NOTE]
@@ -63,7 +65,7 @@ To generate documentation for a code repository using AI Docs, follow these step
    ```
    python -m ai_docs.generate_docs <local repository directory>
    ```
-4. The script will extract the relevant code files, send them to the Claude AI model for processing, and generate a `README.md` file inside the specified repository directory.
+4. The script will extract the relevant code files, send them to the Claude AI model for processing, and generate a `README.md` file inside the specified repository directory, overwriting any existing `README.md`.
 5. Review the generated documentation and make any necessary adjustments or additions.
 
 That's it! You have now generated technical documentation for your code repository using AI Docs.
